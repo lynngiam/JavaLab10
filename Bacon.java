@@ -23,7 +23,7 @@ public class Bacon {
 																// first search
 	private static Map<String, String> predecessor = new HashMap();
 
-	private static String center;
+	private static String center = "";
 
 	public static void main(String[] args) {
 		// @@@@ Added generic type <String> to Lists.
@@ -51,13 +51,12 @@ public class Bacon {
 			String[] data = s.nextLine().split("\\|");
 			String actor = data[0];
 			// ???? Why do we need this?
-			if (!actor.contains("(")) {
-				actor = actor + "(I)";
-			}
+			// if (!actor.contains("(")) {
+			// actor = actor + "(I)";
+			// }
 			String movie = data[1];
 			if (aTM.containsKey(actor)) {
-				// ???? Line below should be aTM.get(actor)?
-				List<String> currentList = mTA.get(actor);
+				List<String> currentList = aTM.get(actor);
 				currentList.add(movie);
 				aTM.put(actor, currentList);
 			} else {
@@ -65,8 +64,7 @@ public class Bacon {
 				movies.add(movie);
 				aTM.put(actor, movies);
 			}
-			// ???? Line below should be mTA.get(movie)?
-			if (mTA.containsKey(actor)) {
+			if (mTA.containsKey(movie)) {
 				List<String> currentList = mTA.get(movie);
 				currentList.add(actor);
 				mTA.put(movie, currentList);
@@ -77,8 +75,11 @@ public class Bacon {
 			}
 		}
 		// Determining center
-		if (args[1] != "") {
-			center = args[1];
+		if (args.length > 1) {
+			for (int i = 1; i < args.length - 1; i++) {
+				center += args[i] + " ";
+			}
+			center += args[args.length - 1];
 		} else {
 			center = "Kevin Bacon (I)";
 		}
@@ -93,7 +94,8 @@ public class Bacon {
 		System.out.print("Enter a command: ");
 		Scanner commands = new Scanner(System.in);
 		while (commands.hasNext()) {
-			String input = commands.next();
+			// Changed next() to nextLine().
+			String input = commands.nextLine();
 			if (input.equals("help")) {
 				help();
 			} else if (input.contains("find")) {
@@ -120,53 +122,73 @@ public class Bacon {
 	}
 
 	private static void topcenter(int n) {
-		// TODO Auto-generated method stub
-
+		return;
 	}
 
 	private static void centers() {
-		// TODO Auto-generated method stub
+		return;
 
 	}
 
 	private static void avgdist() {
-		// TODO Auto-generated method stub
-
+		return;
 	}
 
 	private static void recenter(String name) {
 		center = name;
-
+		visited.clear();
+		predecessor.clear();
 	}
 
-	private static void find(String name) {
-		boolean isActor = true;
-		String target = null;
+	private static int find(String name) {
+		// SUGGESTION: factor this check out for private method?
+		if (!aTM.containsKey(name)) {
+			System.out.println(name + " is not in the database.");
+			return -1;
+		}
+		int bacon = -1;
+		String target = center;
 		Queue<String> allEdgesTo = new LinkedList<String>();
-		allEdgesTo.add(name);
+		allEdgesTo.add(center);
 
-		while (target != center && !allEdgesTo.isEmpty()) {
+		while (!target.equals(name) && !allEdgesTo.isEmpty()) {
 			target = allEdgesTo.remove();
-			if (!visited.contains(target)) {
 
-				List<String> currentEdgesTo = new ArrayList<String>();
+			// Mark the node visited.
+			visited.add(target);
+			List<String> currentEdgesTo;
 
-				// Get the appropriate list of vertices connected to target
-				if (isActor)
-					currentEdgesTo = aTM.get(target);
-				else
-					currentEdgesTo = mTA.get(target);
-				isActor = !isActor;
+			// Get the appropriate list of vertices connected to target
+			if ((currentEdgesTo = aTM.get(target)) == null)
+				currentEdgesTo = mTA.get(target);
 
-				for (String vertex : currentEdgesTo) {
+			// For each unvisited connected vertex, update predecessor mark add to queue.
+			for (String vertex : currentEdgesTo) {
+				if (!visited.contains(vertex)) {
+					predecessor.put(vertex, target);
 					allEdgesTo.add(vertex);
 				}
+
 			}
 		}
-	}
 
-	private static findHelper(String target) {
-		
+		if (visited.contains(name)) {
+			String node = name;
+			int count = 0;
+			while (!node.equals(center)) {
+				System.out.print(node + " -> ");
+				node = predecessor.get(node);
+				count++;
+			}
+
+			bacon = count / 2;
+			System.out.println(node + " (" + bacon + ") ");
+		} else {
+			System.out.println(name + " is unreachable.");
+		}
+
+		// Returns the default -1 if connection not found.
+		return bacon;
 	}
 
 	private static void help() {
@@ -175,7 +197,7 @@ public class Bacon {
 		System.out.println("   2. find <name>");
 		System.out.println("   3. recenter <name>");
 		System.out.println("   4. avgdist");
-		System.out.println("   5. centers");List
+		System.out.println("   5. centers");
 		System.out.println("   6. topcenter <n>");
 		System.out.print("Enter a command: ");
 
