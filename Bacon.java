@@ -122,18 +122,77 @@ public class Bacon {
 	}
 
 	private static void topcenter(int n) {
-		return;
+	// TODO Auto-generated method stub
+	String[] aTMKeys = (String[]) aTM.keySet().toArray();
+	TreeMap<Double, String> results = new TreeMap<Double, String>();
+	String previousCenter = center;
+	for (int i = 0; i < aTMKeys.length; i++) {
+	    center = aTMKeys[i];
+	    double currentAvgDist = avgdist();
+	    results.put(currentAvgDist, center);
+	    }
+	center = previousCenter;
+	for (int j = 0; j<n; j++) {
+	    Entry<Double, String> currentEntry = results.pollLastEntry();
+	    System.out.println(""+(j+1)+". "+currentEntry.getValue()+"\t"+currentEntry.getKey());
+	    }
+
 	}
 
-	private static void centers() {
-		return;
+
+    private static void circles() {
+	// TODO Auto-generated method stub
+	Set<String> aTMKeys = aTM.keySet();
+	TreeMap<Integer, List<String>> results = new TreeMap<Integer, List<String>>();
+	aTMKeys.remove(center);
+	Iterator<String> it = aTMKeys.iterator();
+	while (it.hasNext()){
+	    String currentActor = it.next();
+	    int currentBN = find(currentActor);
+	    if(!results.containsKey(currentBN)) {
+		List<String> value = new ArrayList<String>();
+		value.add(currentActor);
+		results.put(currentBN, value);
+	    }
+	    else {
+		results.get(currentBN).add(currentActor);
+	    }
+	for (int j = 0; j<10; j++) {
+	    Entry<Integer, List<String>> currentEntry = results.pollFirstEntry();
+	    List<String> truncatedValue = currentEntry.getValue().subList(0,2);
+	    System.out.print(""+currentEntry.getKey()+"\t"+currentEntry.getValue().size()+"\t"+truncatedValue.toString());
+	    }
 
 	}
 
-	private static void avgdist() {
-		return;
-	}
+    }
 
+    private static double avgdist() {
+	// TODO Auto-generated method stub
+	int reachable = 0;
+	int unreachable = 0;
+	String[] aTMKeys = (String[]) aTM.keySet().toArray();
+	Set<String> aTMKeysSet = aTM.keySet();
+	aTMKeysSet.remove(center);
+	Iterator<String> it = aTMKeysSet.iterator();
+	int TotalBN = 0;
+	while (it.hasNext()) {
+	    // bacon number needed
+	    int currentBN = find(it.next());
+	    if (currentBN == -1) { // test if target is reachable from center
+		unreachable++;
+	    } else {
+		reachable++;
+		TotalBN += currentBN;
+	    }
+
+	}
+	double avgdist = TotalBN / reachable;
+	System.out.println(""+avgdist+"\t"+center+" ("+reachable+","+unreachable+")");
+	return avgdist;
+
+    }
+	
 	private static void recenter(String name) {
 		center = name;
 		visited.clear();
