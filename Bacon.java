@@ -77,68 +77,75 @@ public class Bacon {
 		mTA.put(movie, actors);
 	    }
 	}
+
 	// Determining center
 	if (args.length > 1) {
 	    for (int i = 1; i < args.length - 1; i++) {
 		center += args[i] + " ";
 	    }
 	    center += args[args.length - 1];
+	} else if (!aTM.containsKey("Kevin Bacon (I)")) {
+	    center = aTM.keySet().toArray(new String[aTM.keySet().size()])[0];
 	} else {
 	    center = "Kevin Bacon (I)";
 	}
+	System.out.println("Center is: " + center);
 	// Additional commands prompts
-	System.out.println("Available commands include: ");
-	System.out.println("   1. help");
-	System.out.println("   2. quit");
-	System.out.println("   3. find <name>");
-	System.out.println("   4. recenter <name>");
-	System.out.println("   5. avgdist");
-	System.out.println("   6. circles");
-	System.out.println("   7. topcenter <n>");
-	System.out.print("Enter a command: ");
+	help();
 	Scanner commands = new Scanner(System.in);
-	while (commands.hasNext()) {
+	while (commands.hasNextLine()) {
 	    // Changed next() to nextLine().
 	    String input = commands.nextLine();
 	    if (input.equals("help")) {
 		help();
 	    } else if (input.contains("find")) {
-		String name = input.substring(input.indexOf("<") + 1, input.indexOf(">"));
+		String name = input.replaceFirst("find ", "");
 		find(name);
+		System.out.print("Enter a command: ");
 	    } else if (input.contains("recenter")) {
-		String name = input.substring(input.indexOf("<") + 1, input.indexOf(">"));
+		String name = input.replaceFirst("recenter ", "");
 		recenter(name);
+		System.out.print("Enter a command: ");
 	    } else if (input.equals("avgdist")) {
 		avgdist();
-	    } else if (input.equals("centers")) {
+		System.out.print("Enter a command: ");
+	    } else if (input.equals("circles")) {
 		circles();
-	    } else if (input.contains("topcenter <n> ")) {
-		int n = Integer.parseInt(input.substring(input.indexOf("<") + 1, input.indexOf(">")));
+		System.out.print("Enter a command: ");
+	    } else if (input.contains("topcenter")) {
+		int n = Integer.parseInt(input.replaceFirst("topcenter ", ""));
 		topcenter(n);
+		System.out.print("Enter a command: ");
 	    } else if (input.equals("") || input.equals("quit")) {
 		System.out.println("Thank you for using our Kevin Bacon program!");
 		System.exit(0);
 
 	    } else {
-		System.out.println("Please reenter a command: ");
+		System.out.print("Please reenter a command: ");
 	    }
 	}
     }
 
     private static void topcenter(int n) {
 	// TODO Auto-generated method stub
-	String[] aTMKeys = (String[]) aTM.keySet().toArray();
+	Set<String> aTMKeysSet = aTM.keySet();
+	String[] aTMKeys = aTMKeysSet.toArray(new String[aTMKeysSet.size()]);
+	System.out.println(aTMKeys.toString());
 	TreeMap<Double, String> results = new TreeMap<Double, String>();
 	String previousCenter = center;
 	for (int i = 0; i < aTMKeys.length; i++) {
-	    center = aTMKeys[i];
+	    String currentCenter = aTMKeys[i];
+	    recenter(currentCenter);
+	    System.out.println("Current center is: " + center);
 	    double currentAvgDist = avgdist();
+	    System.out.println("Current Avg Dist is: " + currentAvgDist);
 	    results.put(currentAvgDist, center);
 	}
 	center = previousCenter;
 	for (int j = 0; j < n; j++) {
-	    Entry<Double, String> currentEntry = results.pollLastEntry();
-	    System.out.println("" + (j + 1) + ". " + currentEntry.getValue() + "\t" + currentEntry.getKey());
+	    Entry<Double, String> currentEntry = results.pollFirstEntry();
+	    System.out.println("" + (j + 1) + ". " + currentEntry.getValue() + "\t" + "\t" + currentEntry.getKey()); // do
+														     // printf
 	}
 
     }
@@ -175,12 +182,12 @@ public class Bacon {
 	int reachable = 0;
 	int unreachable = 0;
 	Set<String> aTMKeysSet = aTM.keySet();
-	aTMKeysSet.remove(center);
 	Iterator<String> it = aTMKeysSet.iterator();
-	int TotalBN = 0;
+	double TotalBN = 0;
 	while (it.hasNext()) {
 	    // bacon number needed
-	    int currentBN = find(it.next());
+	    String actorName = it.next();
+	    int currentBN = find(actorName);
 	    if (currentBN == -1) { // test if target is reachable from center
 		unreachable++;
 	    } else {
@@ -191,6 +198,7 @@ public class Bacon {
 	}
 	double avgdist = TotalBN / reachable;
 	System.out.println("" + avgdist + "\t" + center + " (" + reachable + "," + unreachable + ")");
+
 	return avgdist;
 
     }
@@ -202,62 +210,62 @@ public class Bacon {
     }
 
     private static int find(String name) {
-		// SUGGESTION: factor this check out for private method?
-		if (!aTM.containsKey(name)) {
-			System.out.println(name + " is not in the database.");
-			return -1;
-		}
-
-		// If name is the center, return 0.
-		if (name.equals(center)) {
-			System.out.println(name + " (0)");
-			return 0;
-		}
-
-		int bacon = -1;
-		String target = center;
-		Queue<String> allEdgesTo = new LinkedList<String>();
-		allEdgesTo.add(center);
-
-		while (!allEdgesTo.isEmpty()) {
-			target = allEdgesTo.remove();
-
-			// Mark the node visited.
-			visited.add(target);
-			List<String> currentEdgesTo;
-
-			// Get the appropriate list of vertices connected to target
-			if ((currentEdgesTo = aTM.get(target)) == null)
-				currentEdgesTo = mTA.get(target);
-
-			// For each unvisited connected vertex, update predecessor mark add to queue.
-			for (String vertex : currentEdgesTo) {
-				if (!visited.contains(vertex)) {
-					predecessor.put(vertex, target);
-					if (!target.equals(name))
-						allEdgesTo.add(vertex);
-				}
-
-			}
-		}
-		if (predecessor.containsKey(name)) {
-			String node = name;
-			int count = 0;
-			while (!node.equals(center)) {
-				System.out.print(node + " -> ");
-				node = predecessor.get(node);
-				count++;
-			}
-
-			bacon = count / 2;
-			System.out.println(node + " (" + bacon + ") ");
-		} else {
-			System.out.println(name + " is unreachable.");
-		}
-
-		// Returns the default -1 if connection not found.
-		return bacon;
+	// SUGGESTION: factor this check out for private method?
+	if (!aTM.containsKey(name)) {
+	    System.out.println(name + " is not in the database.");
+	    return -1;
 	}
+
+	// If name is the center, return 0.
+	if (name.equals(center)) {
+	    System.out.println(name + " (0)");
+	    return 0;
+	}
+
+	int bacon = -1;
+	String target = center;
+	Queue<String> allEdgesTo = new LinkedList<String>();
+	allEdgesTo.add(center);
+
+	while (!allEdgesTo.isEmpty()) {
+	    target = allEdgesTo.remove();
+
+	    // Mark the node visited.
+	    visited.add(target);
+	    List<String> currentEdgesTo;
+
+	    // Get the appropriate list of vertices connected to target
+	    if ((currentEdgesTo = aTM.get(target)) == null)
+		currentEdgesTo = mTA.get(target);
+
+	    // For each unvisited connected vertex, update predecessor mark add to queue.
+	    for (String vertex : currentEdgesTo) {
+		if (!visited.contains(vertex)) {
+		    predecessor.put(vertex, target);
+		    if (!target.equals(name))
+			allEdgesTo.add(vertex);
+		}
+
+	    }
+	}
+	if (predecessor.containsKey(name)) {
+	    String node = name;
+	    int count = 0;
+	    while (!node.equals(center)) {
+		System.out.print(node + " -> ");
+		node = predecessor.get(node);
+		count++;
+	    }
+
+	    bacon = count / 2;
+	    System.out.println(node + " (" + bacon + ") ");
+	} else {
+	    System.out.println(name + " is unreachable.");
+	}
+
+	// Returns the default -1 if connection not found.
+	return bacon;
+    }
 
     private static void help() {
 	System.out.println("Available commands include: ");
