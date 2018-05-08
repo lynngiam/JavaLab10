@@ -27,7 +27,9 @@ public class Bacon {
     private static Map<String, String> predecessor = new HashMap<String, String>();
 
     private static String center = "";
-
+    // @@@@ Made this queue static.
+    private static Queue<String> allEdgesTo = new LinkedList<String>();
+	
     public static void main(String[] args) {
 	// @@@@ Added generic type <String> to Lists.
 	Scanner s = null;
@@ -89,6 +91,8 @@ public class Bacon {
 	} else {
 	    center = "Kevin Bacon (I)";
 	}
+	// Add the center to the first element of the queue in find.
+	allEdgesTo.add(center);
 	System.out.println("Center is: " + center);
 	// Additional commands prompts
 	help();
@@ -204,68 +208,67 @@ public class Bacon {
     }
 
     private static void recenter(String name) {
-	center = name;
-	visited.clear();
-	predecessor.clear();
-    }
+		center = name;
+		visited.clear();
+		predecessor.clear();
+		allEdgesTo.clear();
+		allEdgesTo.add(center);
+	}
 
     private static int find(String name) {
-	// SUGGESTION: factor this check out for private method?
-	if (!aTM.containsKey(name)) {
-	    System.out.println(name + " is not in the database.");
-	    return -1;
-	}
-
-	// If name is the center, return 0.
-	if (name.equals(center)) {
-	    System.out.println(name + " (0)");
-	    return 0;
-	}
-
-	int bacon = -1;
-	String target = center;
-	Queue<String> allEdgesTo = new LinkedList<String>();
-	allEdgesTo.add(center);
-
-	while (!allEdgesTo.isEmpty()) {
-	    target = allEdgesTo.remove();
-
-	    // Mark the node visited.
-	    visited.add(target);
-	    List<String> currentEdgesTo;
-
-	    // Get the appropriate list of vertices connected to target
-	    if ((currentEdgesTo = aTM.get(target)) == null)
-		currentEdgesTo = mTA.get(target);
-
-	    // For each unvisited connected vertex, update predecessor mark add to queue.
-	    for (String vertex : currentEdgesTo) {
-		if (!visited.contains(vertex)) {
-		    predecessor.put(vertex, target);
-		    if (!target.equals(name))
-			allEdgesTo.add(vertex);
+		// SUGGESTION: factor this check out for private method?
+		if (!aTM.containsKey(name)) {
+			System.out.println(name + " is not in the database.");
+			return -1;
 		}
 
-	    }
-	}
-	if (predecessor.containsKey(name)) {
-	    String node = name;
-	    int count = 0;
-	    while (!node.equals(center)) {
-		System.out.print(node + " -> ");
-		node = predecessor.get(node);
-		count++;
-	    }
+		// If name is the center, return 0.
+		if (name.equals(center)) {
+			System.out.println(name + " (0)");
+			return 0;
+		}
 
-	    bacon = count / 2;
-	    System.out.println(node + " (" + bacon + ") ");
-	} else {
-	    System.out.println(name + " is unreachable.");
-	}
+		int bacon = -1;
+		String target = "";
 
-	// Returns the default -1 if connection not found.
-	return bacon;
-    }
+		while (!target.equals(name) && !allEdgesTo.isEmpty()) {
+			target = allEdgesTo.remove();
+
+			// Mark the node visited.
+			visited.add(target);
+			List<String> currentEdgesTo;
+
+			// Get the appropriate list of vertices connected to target
+			if ((currentEdgesTo = aTM.get(target)) == null)
+				currentEdgesTo = mTA.get(target);
+
+			// For each unvisited connected vertex, update predecessor mark add to queue.
+			for (String vertex : currentEdgesTo) {
+				if (!visited.contains(vertex)) {
+					predecessor.put(vertex, target);
+					allEdgesTo.add(vertex);
+				}
+
+			}
+		}
+		if (predecessor.containsKey(name)) {
+			String node = name;
+			int count = 0;
+			while (!node.equals(center)) {
+				System.out.print(node + " -> ");
+				node = predecessor.get(node);
+				count++;
+			}
+
+			bacon = count / 2;
+			System.out.println(node + " (" + bacon + ") ");
+		} else {
+			System.out.println(name + " is unreachable.");
+		}
+
+		// Returns the default -1 if connection not found.
+		return bacon;
+	}
 
     private static void help() {
 	System.out.println("Available commands include: ");
