@@ -86,6 +86,10 @@ public class Bacon {
 		center += args[i] + " ";
 	    }
 	    center += args[args.length - 1];
+		if (!mTA.containsKey(center)) {
+			System.err.println(center + " is not in this data set.");
+			System.exit(1);
+		}
 	} else if (!aTM.containsKey("Kevin Bacon (I)")) {
 	    center = aTM.keySet().toArray(new String[aTM.keySet().size()])[0];
 	} else {
