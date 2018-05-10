@@ -138,20 +138,23 @@ public class Bacon {
 	// TODO Auto-generated method stub
 	Set<String> aTMKeysSet = aTM.keySet();
 	String[] aTMKeys = aTMKeysSet.toArray(new String[aTMKeysSet.size()]);
-	System.out.println(aTMKeys.toString());
 	TreeMap<Double, String> results = new TreeMap<Double, String>();
 	String previousCenter = center;
 	for (int i = 0; i < aTMKeys.length; i++) {
 	    String currentCenter = aTMKeys[i];
-	    recenter(currentCenter);
-	    double currentAvgDist = avgdist();
-	    results.put(currentAvgDist, center);
+	    if (findBacon(currentCenter) != -1) {
+		recenter(currentCenter);
+		double currentAvgDist = avgDistNoPrint();
+		results.put(currentAvgDist, center);
+		recenter(previousCenter);
+	    }
 	}
-	center = previousCenter;
 	for (int j = 0; j < n; j++) {
 	    Entry<Double, String> currentEntry = results.pollFirstEntry();
-	    System.out.println("" + (j + 1) + ". " + currentEntry.getValue() + "\t" + "\t" + currentEntry.getKey()); // do
-														     // printf
+	    System.out.printf("%d. %-20s %.16f \n", (j + 1), currentEntry.getValue(), currentEntry.getKey());
+	    // System.out.println("" + (j + 1) + ". " + currentEntry.getValue() + "\t" +
+	    // "\t" + currentEntry.getKey()); // do
+	    // printf
 	}
 
     }
@@ -195,7 +198,7 @@ public class Bacon {
 
     }
 
-    private static double avgdist() {
+    private static double avgDistNoPrint() {
 	// TODO Auto-generated method stub
 	int reachable = 0;
 	int unreachable = 0;
@@ -216,8 +219,31 @@ public class Bacon {
 	}
 	double avgdist = TotalBN / reachable;
 
-	System.out.println("" + avgdist + "\t" + center + " (" + reachable + "," + unreachable + ")");
+	return avgdist;
 
+    }
+
+    private static double avgdist() {
+	// TODO Auto-generated method stub
+	int reachable = 0;
+	int unreachable = 0;
+	Set<String> aTMKeysSet = aTM.keySet();
+	Iterator<String> it = aTMKeysSet.iterator();
+	double TotalBN = 0;
+	while (it.hasNext()) {
+	    // bacon number needed
+	    String actorName = it.next();
+	    int currentBN = findBacon(actorName);
+	    if (currentBN == -1) { // test if target is reachable from center
+		unreachable++;
+	    } else {
+		reachable++;
+		TotalBN += currentBN;
+	    }
+
+	}
+	double avgdist = TotalBN / reachable;
+	System.out.println("" + avgdist + "\t" + center + " (" + reachable + "," + unreachable + ")");
 	return avgdist;
 
     }
@@ -276,27 +302,60 @@ public class Bacon {
 	return bacon;
     }
 
-    private static void find(String name) {
-		// SUGGESTION: factor this check out for private method?
-		if (!aTM.containsKey(name)) {
-			System.out.println(name + " is not in the database.");
+    private static int find(String name) {
+	// SUGGESTION: factor this check out for private method?
+	if (!aTM.containsKey(name)) {
+	    System.out.println(name + " is not in the database.");
+	    return -1;
+	}
+
+	// If name is the center, return 0.
+	if (name.equals(center)) {
+	    System.out.println(name + " (0)");
+	    return 0;
+	}
+
+	int bacon = -1;
+	String target = "";
+
+	while (!target.equals(name) && !allEdgesTo.isEmpty()) {
+	    target = allEdgesTo.remove();
+
+	    // Mark the node visited.
+	    visited.add(target);
+	    List<String> currentEdgesTo;
+
+	    // Get the appropriate list of vertices connected to target
+	    if ((currentEdgesTo = aTM.get(target)) == null)
+		currentEdgesTo = mTA.get(target);
+
+	    // For each unvisited connected vertex, update predecessor mark add to queue.
+	    for (String vertex : currentEdgesTo) {
+		if (!visited.contains(vertex)) {
+		    predecessor.put(vertex, target);
+		    allEdgesTo.add(vertex);
 		}
 
-		int bacon = findBacon(name);
-		// If name is the center, return 0.
-		if (bacon < 0) {
-			System.out.println(name + " is unreachable.");
-		} else if (bacon == 0) {
-			System.out.println(name + " (0)");
-		} else {
-			String node = name;
-			while (!node.equals(center)) {
-				System.out.print(node + " -> ");
-				node = predecessor.get(node);
-			}
-			System.out.println(node + " (" + bacon + ") ");
-		}
+	    }
 	}
+	if (predecessor.containsKey(name)) {
+	    String node = name;
+	    int count = 0;
+	    while (!node.equals(center)) {
+		System.out.print(node + " -> ");
+		node = predecessor.get(node);
+		count++;
+	    }
+
+	    bacon = count / 2;
+	    System.out.println(node + " (" + bacon + ") ");
+	} else {
+	    System.out.println(name + " is unreachable.");
+	}
+
+	// Returns the default -1 if connection not found.
+	return bacon;
+    }
 
     private static void help() {
 	System.out.println("Available commands include: ");
