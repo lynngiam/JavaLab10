@@ -218,7 +218,51 @@ public class Bacon {
 		allEdgesTo.clear();
 		allEdgesTo.add(center);
 	}
+	private static int findBacon(String name) {
 
+			// If name is the center, return 0.
+			if (name.equals(center)) {
+				return 0;
+			}
+
+			int bacon = -1;
+			String target = "";
+
+			while (!target.equals(name) && !allEdgesTo.isEmpty()) {
+				target = allEdgesTo.remove();
+
+				// Mark the node visited.
+				visited.add(target);
+				List<String> currentEdgesTo;
+
+				// Get the appropriate list of vertices connected to target
+				if ((currentEdgesTo = aTM.get(target)) == null)
+					currentEdgesTo = mTA.get(target);
+
+				// For each unvisited connected vertex, update predecessor mark add to queue.
+				for (String vertex : currentEdgesTo) {
+					if (!visited.contains(vertex)) {
+						predecessor.put(vertex, target);
+						allEdgesTo.add(vertex);
+					}
+
+				}
+			}
+
+			if (predecessor.containsKey(name)) {
+				String node = name;
+				int count = 0;
+				while (!node.equals(center)) {
+					node = predecessor.get(node);
+					count++;
+				}
+				// assign bacon to the count.
+				bacon = count / 2;
+			}
+
+			// Returns the default -1 if connection not found.
+			return bacon;
+		}	
     private static int find(String name) {
 		// SUGGESTION: factor this check out for private method?
 		if (!aTM.containsKey(name)) {
