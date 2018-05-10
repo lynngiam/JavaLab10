@@ -86,7 +86,7 @@ public class Bacon {
 		center += args[i] + " ";
 	    }
 	    center += args[args.length - 1];
-	    if (!mTA.containsKey(center)) {
+	    if (!aTM.containsKey(center)) {
 		System.err.println(center + " is not in this data set.");
 		System.exit(1);
 	    }
