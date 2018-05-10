@@ -29,7 +29,7 @@ public class Bacon {
     private static String center = "";
     // @@@@ Made this queue static.
     private static Queue<String> allEdgesTo = new LinkedList<String>();
-	
+
     public static void main(String[] args) {
 	// @@@@ Added generic type <String> to Lists.
 	Scanner s = null;
@@ -86,10 +86,10 @@ public class Bacon {
 		center += args[i] + " ";
 	    }
 	    center += args[args.length - 1];
-		if (!mTA.containsKey(center)) {
-			System.err.println(center + " is not in this data set.");
-			System.exit(1);
-		}
+	    if (!mTA.containsKey(center)) {
+		System.err.println(center + " is not in this data set.");
+		System.exit(1);
+	    }
 	} else if (!aTM.containsKey("Kevin Bacon (I)")) {
 	    center = aTM.keySet().toArray(new String[aTM.keySet().size()])[0];
 	} else {
@@ -144,9 +144,7 @@ public class Bacon {
 	for (int i = 0; i < aTMKeys.length; i++) {
 	    String currentCenter = aTMKeys[i];
 	    recenter(currentCenter);
-	    System.out.println("Current center is: " + center);
 	    double currentAvgDist = avgdist();
-	    System.out.println("Current Avg Dist is: " + currentAvgDist);
 	    results.put(currentAvgDist, center);
 	}
 	center = previousCenter;
@@ -160,27 +158,39 @@ public class Bacon {
 
     private static void circles() {
 	// TODO Auto-generated method stub
+	// this ranks actors based on their bacon number from the assigned center
 	Set<String> aTMKeys = aTM.keySet();
-	TreeMap<Integer, List<String>> results = new TreeMap<Integer, List<String>>();
-	aTMKeys.remove(center);
-	Iterator<String> it = aTMKeys.iterator();
+	TreeMap<Integer, List<String>> results = new TreeMap<Integer, List<String>>(); // the keys are bacon number and
+										       // the values are actors with
+										       // that bacon number from the
+										       // center
+	Iterator<String> it = aTMKeys.iterator(); // iterator loops through the list of actors
 	while (it.hasNext()) {
 	    String currentActor = it.next();
-	    int currentBN = find(currentActor);
-	    if (!results.containsKey(currentBN)) {
-		List<String> value = new ArrayList<String>();
-		value.add(currentActor);
-		results.put(currentBN, value);
+	    int currentBN = findBacon(currentActor); // for each actor, find their bacon number
+	    if (currentBN >= 0) {
+		if (!results.containsKey(currentBN)) {
+		    // currentBN >=0 is necessary to avoid unreachable actors
+		    List<String> value = new ArrayList<String>();
+		    value.add(currentActor);
+		    results.put(currentBN, value);
+		} else { // if the results already contains this bacon number
+		    results.get(currentBN).add(currentActor);
+		}
 	    } else {
-		results.get(currentBN).add(currentActor);
+		continue;
 	    }
-	    for (int j = 0; j < 10; j++) {
-		Entry<Integer, List<String>> currentEntry = results.pollFirstEntry();
-		List<String> truncatedValue = currentEntry.getValue().subList(0, 2);
-		System.out.print("" + currentEntry.getKey() + "\t" + currentEntry.getValue().size() + "\t"
-			+ truncatedValue.toString());
+	}
+	while (!results.isEmpty()) {
+	    Entry<Integer, List<String>> currentEntry = results.pollFirstEntry(); // get the lowest bacon number
+	    List<String> value = currentEntry.getValue(); // this is a list of actors with this bacon number
+	    System.out.print("" + currentEntry.getKey() + "\t" + value.size() + "\t");
+	    if (value.size() > 2) { // print a maximum of 3 actors
+		List<String> truncatedValue = value.subList(0, 3);
+		System.out.println(truncatedValue.toString());
+	    } else {
+		System.out.println(value.toString());
 	    }
-
 	}
 
     }
@@ -195,7 +205,7 @@ public class Bacon {
 	while (it.hasNext()) {
 	    // bacon number needed
 	    String actorName = it.next();
-	    int currentBN = find(actorName);
+	    int currentBN = findBacon(actorName);
 	    if (currentBN == -1) { // test if target is reachable from center
 		unreachable++;
 	    } else {
@@ -205,6 +215,7 @@ public class Bacon {
 
 	}
 	double avgdist = TotalBN / reachable;
+
 	System.out.println("" + avgdist + "\t" + center + " (" + reachable + "," + unreachable + ")");
 
 	return avgdist;
@@ -212,111 +223,113 @@ public class Bacon {
     }
 
     private static void recenter(String name) {
-		center = name;
-		visited.clear();
-		predecessor.clear();
-		allEdgesTo.clear();
-		allEdgesTo.add(center);
+	center = name;
+	visited.clear();
+	predecessor.clear();
+	allEdgesTo.clear();
+	allEdgesTo.add(center);
+    }
+
+    private static int findBacon(String name) {
+
+	// If name is the center, return 0.
+	if (name.equals(center)) {
+	    return 0;
 	}
-	private static int findBacon(String name) {
 
-			// If name is the center, return 0.
-			if (name.equals(center)) {
-				return 0;
-			}
+	int bacon = -1;
+	String target = "";
 
-			int bacon = -1;
-			String target = "";
+	while (!target.equals(name) && !allEdgesTo.isEmpty()) {
+	    target = allEdgesTo.remove();
 
-			while (!target.equals(name) && !allEdgesTo.isEmpty()) {
-				target = allEdgesTo.remove();
+	    // Mark the node visited.
+	    visited.add(target);
+	    List<String> currentEdgesTo;
 
-				// Mark the node visited.
-				visited.add(target);
-				List<String> currentEdgesTo;
+	    // Get the appropriate list of vertices connected to target
+	    if ((currentEdgesTo = aTM.get(target)) == null)
+		currentEdgesTo = mTA.get(target);
 
-				// Get the appropriate list of vertices connected to target
-				if ((currentEdgesTo = aTM.get(target)) == null)
-					currentEdgesTo = mTA.get(target);
+	    // For each unvisited connected vertex, update predecessor mark add to queue.
+	    for (String vertex : currentEdgesTo) {
+		if (!visited.contains(vertex)) {
+		    predecessor.put(vertex, target);
+		    allEdgesTo.add(vertex);
+		}
 
-				// For each unvisited connected vertex, update predecessor mark add to queue.
-				for (String vertex : currentEdgesTo) {
-					if (!visited.contains(vertex)) {
-						predecessor.put(vertex, target);
-						allEdgesTo.add(vertex);
-					}
+	    }
+	}
 
-				}
-			}
+	if (predecessor.containsKey(name)) {
+	    String node = name;
+	    int count = 0;
+	    while (!node.equals(center)) {
+		node = predecessor.get(node);
+		count++;
+	    }
+	    // assign bacon to the count.
+	    bacon = count / 2;
+	}
 
-			if (predecessor.containsKey(name)) {
-				String node = name;
-				int count = 0;
-				while (!node.equals(center)) {
-					node = predecessor.get(node);
-					count++;
-				}
-				// assign bacon to the count.
-				bacon = count / 2;
-			}
+	// Returns the default -1 if connection not found.
+	return bacon;
+    }
 
-			// Returns the default -1 if connection not found.
-			return bacon;
-		}	
     private static int find(String name) {
-		// SUGGESTION: factor this check out for private method?
-		if (!aTM.containsKey(name)) {
-			System.out.println(name + " is not in the database.");
-			return -1;
-		}
-
-		// If name is the center, return 0.
-		if (name.equals(center)) {
-			System.out.println(name + " (0)");
-			return 0;
-		}
-
-		int bacon = -1;
-		String target = "";
-
-		while (!target.equals(name) && !allEdgesTo.isEmpty()) {
-			target = allEdgesTo.remove();
-
-			// Mark the node visited.
-			visited.add(target);
-			List<String> currentEdgesTo;
-
-			// Get the appropriate list of vertices connected to target
-			if ((currentEdgesTo = aTM.get(target)) == null)
-				currentEdgesTo = mTA.get(target);
-
-			// For each unvisited connected vertex, update predecessor mark add to queue.
-			for (String vertex : currentEdgesTo) {
-				if (!visited.contains(vertex)) {
-					predecessor.put(vertex, target);
-					allEdgesTo.add(vertex);
-				}
-
-			}
-		}
-		if (predecessor.containsKey(name)) {
-			String node = name;
-			int count = 0;
-			while (!node.equals(center)) {
-				System.out.print(node + " -> ");
-				node = predecessor.get(node);
-				count++;
-			}
-
-			bacon = count / 2;
-			System.out.println(node + " (" + bacon + ") ");
-		} else {
-			System.out.println(name + " is unreachable.");
-		}
-
-		// Returns the default -1 if connection not found.
-		return bacon;
+	// SUGGESTION: factor this check out for private method?
+	if (!aTM.containsKey(name)) {
+	    System.out.println(name + " is not in the database.");
+	    return -1;
 	}
+
+	// If name is the center, return 0.
+	if (name.equals(center)) {
+	    System.out.println(name + " (0)");
+	    return 0;
+	}
+
+	int bacon = -1;
+	String target = "";
+
+	while (!target.equals(name) && !allEdgesTo.isEmpty()) {
+	    target = allEdgesTo.remove();
+
+	    // Mark the node visited.
+	    visited.add(target);
+	    List<String> currentEdgesTo;
+
+	    // Get the appropriate list of vertices connected to target
+	    if ((currentEdgesTo = aTM.get(target)) == null)
+		currentEdgesTo = mTA.get(target);
+
+	    // For each unvisited connected vertex, update predecessor mark add to queue.
+	    for (String vertex : currentEdgesTo) {
+		if (!visited.contains(vertex)) {
+		    predecessor.put(vertex, target);
+		    allEdgesTo.add(vertex);
+		}
+
+	    }
+	}
+	if (predecessor.containsKey(name)) {
+	    String node = name;
+	    int count = 0;
+	    while (!node.equals(center)) {
+		System.out.print(node + " -> ");
+		node = predecessor.get(node);
+		count++;
+	    }
+
+	    bacon = count / 2;
+	    System.out.println(node + " (" + bacon + ") ");
+	} else {
+	    System.out.println(name + " is unreachable.");
+	}
+
+	// Returns the default -1 if connection not found.
+	return bacon;
+    }
 
     private static void help() {
 	System.out.println("Available commands include: ");
