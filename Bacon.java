@@ -276,60 +276,27 @@ public class Bacon {
 	return bacon;
     }
 
-    private static int find(String name) {
-	// SUGGESTION: factor this check out for private method?
-	if (!aTM.containsKey(name)) {
-	    System.out.println(name + " is not in the database.");
-	    return -1;
-	}
-
-	// If name is the center, return 0.
-	if (name.equals(center)) {
-	    System.out.println(name + " (0)");
-	    return 0;
-	}
-
-	int bacon = -1;
-	String target = "";
-
-	while (!target.equals(name) && !allEdgesTo.isEmpty()) {
-	    target = allEdgesTo.remove();
-
-	    // Mark the node visited.
-	    visited.add(target);
-	    List<String> currentEdgesTo;
-
-	    // Get the appropriate list of vertices connected to target
-	    if ((currentEdgesTo = aTM.get(target)) == null)
-		currentEdgesTo = mTA.get(target);
-
-	    // For each unvisited connected vertex, update predecessor mark add to queue.
-	    for (String vertex : currentEdgesTo) {
-		if (!visited.contains(vertex)) {
-		    predecessor.put(vertex, target);
-		    allEdgesTo.add(vertex);
+    private static void find(String name) {
+		// SUGGESTION: factor this check out for private method?
+		if (!aTM.containsKey(name)) {
+			System.out.println(name + " is not in the database.");
 		}
 
-	    }
+		int bacon = findBacon(name);
+		// If name is the center, return 0.
+		if (bacon < 0) {
+			System.out.println(name + " is unreachable.");
+		} else if (bacon == 0) {
+			System.out.println(name + " (0)");
+		} else {
+			String node = name;
+			while (!node.equals(center)) {
+				System.out.print(node + " -> ");
+				node = predecessor.get(node);
+			}
+			System.out.println(node + " (" + bacon + ") ");
+		}
 	}
-	if (predecessor.containsKey(name)) {
-	    String node = name;
-	    int count = 0;
-	    while (!node.equals(center)) {
-		System.out.print(node + " -> ");
-		node = predecessor.get(node);
-		count++;
-	    }
-
-	    bacon = count / 2;
-	    System.out.println(node + " (" + bacon + ") ");
-	} else {
-	    System.out.println(name + " is unreachable.");
-	}
-
-	// Returns the default -1 if connection not found.
-	return bacon;
-    }
 
     private static void help() {
 	System.out.println("Available commands include: ");
