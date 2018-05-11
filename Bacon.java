@@ -333,16 +333,16 @@ public class Bacon {
 		}
 	}
 
-	private static void topActors(int n) {
-		class ReverseEntryComparator implements Comparator<Entry<String, Integer>> {
+	static class ReverseEntryComparator implements Comparator<Entry<String, Integer>> {
 
-			public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
-				int val1 = o1.getValue();
-				int val2 = o2.getValue();
-				return val2 - val1;
-			}
-
+		public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
+			int val1 = o1.getValue();
+			int val2 = o2.getValue();
+			return val2 - val1;
 		}
+	}
+
+	private static void topActors(int n) {
 
 		Set<Entry<String, List<String>>> actors = aTM.entrySet();
 		PriorityQueue<Entry<String, Integer>> actorByMovie = new PriorityQueue<Entry<String, Integer>>(
