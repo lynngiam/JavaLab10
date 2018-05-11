@@ -359,6 +359,37 @@ public class Bacon {
 			System.out.printf("%-10s %d\n", top.getKey(), top.getValue());
 		}
 	}
+	
+	private static void costars(int n) {
+
+		Map<String, Integer> costarPoints = new HashMap<String, Integer>();
+		List<String> movies = aTM.get(center);
+		for (String movie : movies) {
+			List<String> actors = mTA.get(movie);
+			for (String actor : actors) {
+				if (!actor.equals(center)) {
+					Integer currentPoint = costarPoints.get(actor);
+					if (currentPoint == null) {
+						costarPoints.put(actor, 1);
+					} else {
+						costarPoints.put(actor, currentPoint + 1);
+					}
+				}
+			}
+		}
+
+		Set<Entry<String, Integer>> costarEntry = costarPoints.entrySet();
+		PriorityQueue<Entry<String, Integer>> costarsSort = new PriorityQueue<Entry<String, Integer>>(
+				new ReverseEntryComparator());
+		for (Entry<String, Integer> costar : costarEntry) {
+			costarsSort.add(costar);
+		}
+
+		for (int i = 0; i < n; i++) {
+			Entry<String, Integer> top = costarsSort.remove();
+			System.out.printf("%-10s %d\n", top.getKey(), top.getValue());
+		}
+	}
 
 	private static void help() {
 		System.out.println("Available commands include: ");
